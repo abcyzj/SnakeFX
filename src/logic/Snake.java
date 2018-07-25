@@ -11,12 +11,15 @@ public class Snake implements Sprite {
     public static double cubeWidth = 30;
     public static final int INIT_LENGTH = 100;
     public static final double BODY_DISTANCE = 1;//每个蛇身圆圈之间相隔距离
+    public static final int HOLE_FRAME_NUM = 100;//钻洞持续的帧数
     public static double speed = 2;//每一帧蛇头移动的距离
-    public enum Direction {LEFT, RIGHT, UP, DOWN};
+    public enum Direction {LEFT, RIGHT, UP, DOWN}
     private Point2D head;
     private LinkedList<Point2D> bodies;
     private Color color;
     public Direction direction;
+    private Hole curHole = null;
+    private int inHoleFrame = 0;//在洞内经历的帧数
 
     public Snake(double headX, double headY, Direction direction, Color color) {
         this.direction = direction;
@@ -115,22 +118,67 @@ public class Snake implements Sprite {
 
         head = head.add(dx, dy);
 
-        if(head.getX() > Constants.CANVAS_WIDTH) {
-            head = new Point2D(0, head.getY());
-        }
-        if(head.getY() > Constants.CANVAS_HEIGHT) {
-            head = new Point2D(head.getX(), 0);
-        }
-        if(head.getX() < 0) {
-            head = new Point2D(Constants.CANVAS_WIDTH, head.getY());
-        }
-        if(head.getY() < 0) {
-            head = new Point2D(head.getX(), Constants.CANVAS_HEIGHT);
+        if(curHole == null) {//只有不在洞内的时候才考虑出界
+            if(head.getX() > Constants.CANVAS_WIDTH) {
+                head = new Point2D(0, head.getY());
+            }
+            if(head.getY() > Constants.CANVAS_HEIGHT) {
+                head = new Point2D(head.getX(), 0);
+            }
+            if(head.getX() < 0) {
+                head = new Point2D(Constants.CANVAS_WIDTH, head.getY());
+            }
+            if(head.getY() < 0) {
+                head = new Point2D(head.getX(), Constants.CANVAS_HEIGHT);
+            }
         }
 
         if(head.distance(bodies.getFirst()) > BODY_DISTANCE) {
             bodies.addFirst(head);
             bodies.removeLast();
         }
+
+        if(curHole != null) {
+            inHoleFrame++;
+        }
+    }
+
+    public void getInHole(Hole hole) {
+        inHoleFrame = 0;
+        curHole = hole;
+        head = new Point2D(10*Constants.CANVAS_WIDTH, 10*Constants.CANVAS_HEIGHT);//将头移动到画布外
+    }
+
+    public void getOutOfHole(Hole hole) {
+        inHoleFrame = 0;
+        curHole = null;
+        double dx = 0, dy = 0;
+        switch(direction) {
+            case RIGHT:
+                dx = Hole.holeSize/2;
+                break;
+            case LEFT:
+                dx = -Hole.holeSize/2;
+                break;
+            case UP:
+                dy = -Hole.holeSize/2;
+                break;
+            case DOWN:
+                dy = Hole.holeSize/2;
+                break;
+        }
+        head = hole.pos.add(dx, dy);
+    }
+
+    public boolean mayGetOutOfHole() {
+        return curHole != null && inHoleFrame > HOLE_FRAME_NUM;
+    }
+
+    public Point2D getHead() {
+        return head;
+    }
+
+    public Hole getCurHole() {
+        return curHole;
     }
 }
