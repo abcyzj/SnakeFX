@@ -1,0 +1,29 @@
+#funcArea {
+    -fx-background-color: linear-gradient(rgb(34, 105, 27) 0%, rgb(72, 143, 39) 20%, rgb(34, 105, 27) 100%);
+}
+
+@font-face {
+    font-family: "JapanFont";
+    src: url("font/JapanFont.ttf")
+}
+
+.circle-button {
+    -fx-background-radius: 5em;
+    -fx-background-color: rgb(136, 136, 136);
+    -fx-border-width: 2px;
+    -fx-border-color: rgb(6, 20, 5);
+    -fx-border-style: solid;
+    -fx-border-radius: 30px;
+    -fx-min-width: 60px;
+    -fx-max-width: 60px;
+    -fx-min-height: 60px;
+    -fx-max-height: 60px;
+}
+.circle-button:hover {
+    -fx-scale-x: 1.2;
+    -fx-scale-y: 1.2;
+    -fx-rotate: 5;
+}
+.info-text {
+    -fx-font-size: 25px;
+}
