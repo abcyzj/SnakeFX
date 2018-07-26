@@ -9,9 +9,10 @@ import java.util.LinkedList;
 public class Snake implements Sprite {
     public static double cubeHeight = 30;
     public static double cubeWidth = 30;
-    public static final int INIT_LENGTH = 100;
+    public static final int INIT_LENGTH = 20;
     public static final double BODY_DISTANCE = 1;//每个蛇身圆圈之间相隔距离
     public static final int HOLE_FRAME_NUM = 100;//钻洞持续的帧数
+    public static final int EAT_BODIES = 10;//每吃一个蛋增加的圆圈数目
     public static double speed = 2;//每一帧蛇头移动的距离
     public enum Direction {LEFT, RIGHT, UP, DOWN}
     private Point2D head;
@@ -54,12 +55,12 @@ public class Snake implements Sprite {
     public void render(GraphicsContext gc) {
         gc.save();
         gc.setFill(color);
-        gc.fillOval(head.getX(), head.getY(), cubeWidth, cubeHeight);
+        gc.fillOval(head.getX() - cubeWidth/2, head.getY() - cubeHeight/2, cubeWidth, cubeHeight);
         for(Point2D P: bodies) {
-            gc.fillOval(P.getX(), P.getY(), cubeWidth, cubeHeight);
+            gc.fillOval(P.getX() - cubeWidth/2, P.getY() - cubeHeight/2, cubeWidth, cubeHeight);
         }
-        double eyeX1 = head.getX() + cubeWidth/2, eyeY1 = head.getY() + cubeHeight/2;
-        double eyeX2 = head.getX() + cubeWidth/2, eyeY2 = head.getY() + cubeHeight/2;
+        double eyeX1 = head.getX(), eyeY1 = head.getY();
+        double eyeX2 = head.getX(), eyeY2 = head.getY();
         switch(direction) {
             case RIGHT:
                 eyeX1 += cubeWidth/4;
@@ -89,8 +90,8 @@ public class Snake implements Sprite {
         gc.fillOval(eyeX1 - cubeWidth/8, eyeY1 - cubeHeight/8, cubeWidth/4, cubeHeight/4);
         gc.fillOval(eyeX2 - cubeWidth/8, eyeY2 - cubeHeight/8, cubeWidth/4, cubeHeight/4);
         gc.setFill(Color.web("#333"));
-        gc.fillOval(eyeX1 - cubeWidth/16, eyeY1 - cubeHeight/16, cubeWidth/8, cubeHeight/8);
-        gc.fillOval(eyeX2 - cubeWidth/16, eyeY2 - cubeHeight/16, cubeWidth/8, cubeHeight/8);
+        gc.fillOval(eyeX1 - cubeWidth/12, eyeY1 - cubeHeight/12, cubeWidth/6, cubeHeight/6);
+        gc.fillOval(eyeX2 - cubeWidth/12, eyeY2 - cubeHeight/12, cubeWidth/6, cubeHeight/6);
         gc.restore();
     }
 
@@ -180,5 +181,12 @@ public class Snake implements Sprite {
 
     public Hole getCurHole() {
         return curHole;
+    }
+
+    public void eatAnEgg() {
+        Point2D tail = bodies.getLast();
+        for(int i = 0; i < EAT_BODIES; i++) {
+            bodies.addLast(new Point2D(tail.getX(), tail.getY()));
+        }
     }
 }

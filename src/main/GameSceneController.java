@@ -4,7 +4,10 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Button;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -23,10 +26,12 @@ public class GameSceneController implements Initializable {
     private Canvas meshBackground;
     @FXML
     private Canvas gameCanvas;
+    @FXML
+    private Button pauseResumeBtn;
 
     private LogicController logicController;
 
-    public enum GameState {GAME_RUNNING};
+    public enum GameState {GAME_RUNNING, GAME_PAUSED}
     private GameState state = GameState.GAME_RUNNING;
 
     @Override
@@ -64,6 +69,20 @@ public class GameSceneController implements Initializable {
 
     public void initEvents(Stage stage) {
         stage.addEventFilter(KeyEvent.KEY_PRESSED, this::onKeyPressed);
+        pauseResumeBtn.addEventFilter(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {
+            if(event.getButton() == MouseButton.PRIMARY) {
+                if(state == GameState.GAME_RUNNING) {
+                    pauseResumeBtn.setText("继续");
+                    logicController.pause();
+                    state = GameState.GAME_PAUSED;
+                }
+                else if(state == GameState.GAME_PAUSED) {
+                    pauseResumeBtn.setText("暂停");
+                    logicController.start();
+                    state = GameState.GAME_RUNNING;
+                }
+            }
+        });
     }
 
     private void onKeyPressed(KeyEvent event) {
