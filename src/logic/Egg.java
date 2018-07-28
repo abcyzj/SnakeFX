@@ -38,4 +38,8 @@ public class Egg implements Sprite {
         obj.put("Y", Y);
         return obj;
     }
+
+    public Point2D getPos() {
+        return new Point2D(X, Y);
+    }
 }

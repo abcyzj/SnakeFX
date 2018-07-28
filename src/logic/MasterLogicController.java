@@ -5,6 +5,7 @@ import io.netty.channel.ChannelFuture;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyEvent;
@@ -16,6 +17,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.net.InetSocketAddress;
+import java.util.Collections;
 import java.util.Random;
 import java.util.Vector;
 
@@ -23,7 +25,6 @@ public class MasterLogicController implements LogicController {
     private Canvas gameCanvas;
     private Text infoLabel;
     private SceneController sceneController;
-    private Vector<Sprite> sprites;
     private Timeline timeline;
     private static final double INIT_FRAME_TIME = 10;
     private double frameTime = 10;
@@ -51,34 +52,79 @@ public class MasterLogicController implements LogicController {
     }
 
     private void initSprites() {
-        sprites = new Vector<>();
         snakes = new Vector<>();
         holes = new Vector<>();
         eggs = new Vector<>();
         bushes = new Vector<>();
 
-        snakeA = new Snake(100, 100, Snake.Direction.RIGHT, Constants.SNAKE_A_COLOR);
-        snakeB = new Snake(200, 300, Snake.Direction.DOWN, Constants.SNAKE_B_COLOR);
-        sprites.add(snakeA);
-        sprites.add(snakeB);
+        for(int i = 0; i < Constants.HOLE_NUM; i++) {
+            Hole newHole;
+            while(true) {
+                double X = Math.random()*Constants.CANVAS_WIDTH;
+                double Y = Math.random()*Constants.CANVAS_HEIGHT;
+                newHole = new Hole(X, Y);
+                boolean ok = true;
+                for(Hole hole: holes) {
+                    if(hole.overlaps(newHole)) {
+                        ok = false;
+                        break;
+                    }
+                }
+                if(ok) {
+                    break;
+                }
+            }
+            holes.add(newHole);
+        }
+
+        Collections.shuffle(holes);
+        Random rand = new Random();
+        snakeA = new Snake(holes.elementAt(0), Snake.Direction.values()[rand.nextInt(Snake.Direction.values().length)], Constants.SNAKE_A_COLOR);
+        snakeB = new Snake(holes.elementAt(1), Snake.Direction.values()[rand.nextInt(Snake.Direction.values().length)], Constants.SNAKE_B_COLOR);
         snakes.add(snakeA);
         snakes.add(snakeB);
 
-        Hole H1 = new Hole(300, 200);
-        sprites.add(H1);
-        holes.add(H1);
-        Hole H2 = new Hole(500, 500);
-        sprites.add(H2);
-        holes.add(H2);
+        genEggs();
 
-        Egg E1 = new Egg(600, 600);
-        sprites.add(E1);
-        eggs.add(E1);
+        for(int i = 0; i < Constants.BUSH_WALL_NUM; i++) {
+            Bush lastBush;
+            while(true) {
+                lastBush = new Bush(Math.random()*Constants.CANVAS_WIDTH, Math.random()*Constants.CANVAS_HEIGHT);
+                for(Hole hole: holes) {
+                    if(hole.overlaps(lastBush)) {
+                        continue;
+                    }
+                }
+                break;
+            }
+            bushes.add(lastBush);
 
-        for(int i = 0; i < 5; i++) {
-            Bush newBush = new Bush(800 + i*Bush.bushSize, 400 + Bush.bushSize);
-            bushes.add(newBush);
-            sprites.add(newBush);
+            double[] dx = {0, 0, -Bush.bushSize, Bush.bushSize};
+            double[] dy = {-Bush.bushSize, Bush.bushSize, 0, 0};
+            for(int j = 0; j < Constants.MAX_BUSH_PER_WALL; j++) {
+                int dir = rand.nextInt(4);
+                Bush newBush = new Bush(lastBush.getPos().getX() + dx[dir], lastBush.getPos().getY() + dy[dir]);
+                if(newBush.outOfCanvas()) {
+                    continue;
+                }
+                boolean ok = true;
+                for(Hole hole: holes) {
+                    if(hole.overlaps(newBush)) {
+                        ok = false;
+                        break;
+                    }
+                }
+                for(Bush bush: bushes) {
+                    if(bush.overlaps(newBush)) {
+                        ok = false;
+                        break;
+                    }
+                }
+                if(ok) {
+                    lastBush = newBush;
+                    bushes.add(newBush);
+                }
+            }
         }
     }
 
@@ -149,6 +195,10 @@ public class MasterLogicController implements LogicController {
             }
         }
         sceneController.notifyInHole(inHole);
+        JSONObject msg = new JSONObject();
+        msg.put("type", "inHole");
+        msg.put("inHole", inHole);
+        channel.writeAndFlush(msg.toString());
     }
 
     private void tackleEgg() {
@@ -163,15 +213,55 @@ public class MasterLogicController implements LogicController {
                         playerB.score += 1;
                     }
                     eggs.remove(egg);
-                    sprites.remove(egg);
-                    Egg newEgg = new Egg(Math.random()*Constants.CANVAS_WIDTH, Math.random()*Constants.CANVAS_HEIGHT);
-                    eggs.add(newEgg);
-                    sprites.add(newEgg);
+                    if(eggs.isEmpty()) {
+                        Timeline genEggTimeline = new Timeline(new KeyFrame(
+                                Duration.millis(Constants.GEN_EGG_TIME),
+                                ae -> genEggs()
+                        ));
+                        genEggTimeline.play();
+                    }
                     break;
                 }
             }
         }
         sceneController.notifyScore(playerA.score);
+        notifyOpponentScore(playerB.score);
+    }
+
+    private void genEggs() {
+        for(int i = 0; i < 2; i++) {
+            double X, Y;
+            Egg newEgg;
+            while(true) {
+                X = Math.random()*Constants.CANVAS_WIDTH;
+                Y = Math.random()*Constants.CANVAS_HEIGHT;
+                newEgg = new Egg(X, Y);
+                boolean ok = true;
+                for(Bush bush: bushes) {
+                    if(bush.overlaps(newEgg)) {
+                        ok = false;
+                        break;
+                    }
+                }
+                for(Hole hole: holes) {
+                    if(hole.overlaps(newEgg)) {
+                        ok = false;
+                        break;
+                    }
+                }
+                if(ok) {
+                    break;
+                }
+            }
+            eggs.add(newEgg);
+        }
+    }
+
+    private void notifyOpponentScore(int score) {
+        JSONObject msg = new JSONObject();
+        msg.put("type", "score");
+        msg.put("score", score);
+        channel.writeAndFlush(msg.toString());
     }
 
     private void tackleCollision() {
@@ -200,7 +290,6 @@ public class MasterLogicController implements LogicController {
     }
 
     private Snake revive(Snake oldSnake) {
-        sprites.remove(oldSnake);
         snakes.remove(oldSnake);
         Random rand = new Random();
         Hole birthHole = holes.elementAt(rand.nextInt(holes.size()));
@@ -216,9 +305,43 @@ public class MasterLogicController implements LogicController {
             playerB.remainingSnakes -= 1;
         }
         snakes.add(newSnake);
-        sprites.add(newSnake);
-        sceneController.notifySnakeNum(playerA.remainingSnakes);
+        if(playerA.remainingSnakes < 0 || playerB.remainingSnakes < 0) {
+            tackleWin();
+        }
+        else {
+            sceneController.notifySnakeNum(playerA.remainingSnakes);
+            notifyOpponentSnakeNum(playerB.remainingSnakes);
+        }
         return newSnake;
+    }
+
+    private void tackleWin() {
+        pause();
+        infoLabel.setVisible(true);
+        infoLabel.setText("胜负已分");
+        sceneController.getPauseResumeBtn().setDisable(true);
+        JSONObject msg = new JSONObject();
+        msg.put("type", "result");
+        if(playerA.remainingSnakes < 0 && playerB.remainingSnakes < 0) {
+            infoLabel.setText("平局");
+            msg.put("result", "draw");
+        }
+        else if(playerA.remainingSnakes < 0) {
+            infoLabel.setText("很遗憾，您输掉了游戏");
+            msg.put("result", "win");
+        }
+        else if(playerB.remainingSnakes < 0) {
+            infoLabel.setText("您赢得了游戏");
+            msg.put("result", "lose");
+        }
+        channel.writeAndFlush(msg.toString());
+    }
+
+    private void notifyOpponentSnakeNum(int snakeNum) {
+        JSONObject msg = new JSONObject();
+        msg.put("type", "snakeNum");
+        msg.put("snakeNum", snakeNum);
+        channel.writeAndFlush(msg.toString());
     }
 
     private void startServer() {
@@ -265,6 +388,16 @@ public class MasterLogicController implements LogicController {
     }
 
     public void start() {
+        startWithoutSending();
+
+        if(channel != null) {
+            JSONObject msg = new JSONObject();
+            msg.put("type", "start");
+            channel.writeAndFlush(msg.toString());
+        }
+    }
+
+    private void startWithoutSending() {
         timeline = new Timeline(new KeyFrame(
                 Duration.millis(frameTime),
                 ae -> updateCanvas()
@@ -276,7 +409,19 @@ public class MasterLogicController implements LogicController {
     }
 
     public void pause() {
+        pauseWithoutSending();
+
+        if(channel != null) {
+            JSONObject msg = new JSONObject();
+            msg.put("type", "pause");
+            channel.writeAndFlush(msg.toString());
+        }
+    }
+
+    private void pauseWithoutSending() {
         timeline.pause();
+        infoLabel.setText("暂停中");
+        infoLabel.setVisible(true);
     }
 
     public void exit() {
@@ -289,11 +434,23 @@ public class MasterLogicController implements LogicController {
     }
 
     public void setSpeed(int speed) {
+        setSpeedWithoutSend(speed);
+
+        JSONObject msg = new JSONObject();
+        msg.put("type", "setSpeed");
+        msg.put("speed", speed);
+        channel.writeAndFlush(msg.toString());
+    }
+
+    public void setSpeedWithoutSend(int speed) {
         frameTime = INIT_FRAME_TIME/(1 + 0.2*speed);
         if(timeline.getStatus() == Animation.Status.RUNNING) {
             pause();
             start();
         }
+        sceneController.removeSliderEvents();
+        sceneController.setSpeedSlider(speed);
+        sceneController.initSliderEvents();
     }
 
     public void onKeyPressed(KeyEvent event) {
@@ -318,25 +475,51 @@ public class MasterLogicController implements LogicController {
                     snakeA.direction = Snake.Direction.RIGHT;
                 }
                 break;
-            case UP:
+        }
+    }
+
+    private void onOpponentKeyPressed(String key) {
+        switch(key) {
+            case "UP":
                 if(snakeB.direction != Snake.Direction.DOWN) {
                     snakeB.direction = Snake.Direction.UP;
                 }
                 break;
-            case DOWN:
+            case "DOWN":
                 if(snakeB.direction != Snake.Direction.UP) {
                     snakeB.direction = Snake.Direction.DOWN;
                 }
                 break;
-            case LEFT:
+            case "LEFT":
                 if(snakeB.direction != Snake.Direction.RIGHT) {
                     snakeB.direction = Snake.Direction.LEFT;
                 }
                 break;
-            case RIGHT:
+            case "RIGHT":
                 if(snakeB.direction != Snake.Direction.LEFT) {
                     snakeB.direction = Snake.Direction.RIGHT;
                 }
+                break;
+        }
+    }
+
+    public void onMessageReceived(JSONObject msg) {
+        String type = msg.getString("type");
+        switch(type) {
+            case "start":
+                startWithoutSending();
+                sceneController.togglePauseBtn(false);
+                break;
+            case "pause":
+                pauseWithoutSending();
+                sceneController.togglePauseBtn(true);
+                break;
+            case "setSpeed":
+                int speed = msg.getInt("speed");
+                setSpeedWithoutSend(speed);
+                break;
+            case "keyPressed":
+                onOpponentKeyPressed(msg.getString("key"));
                 break;
         }
     }

@@ -1,5 +1,7 @@
 package main;
 
+import javafx.beans.value.ChangeListener;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.canvas.Canvas;
@@ -17,6 +19,7 @@ import javafx.stage.Stage;
 import logic.LogicController;
 import logic.MasterLogicController;
 import logic.SlaveLogicController;
+import org.json.JSONObject;
 
 import java.net.URL;
 import java.util.Optional;
@@ -61,14 +64,18 @@ public class SceneController implements Initializable {
 
     private LogicController logicController;
 
+    private ChangeListener<Number> sliderValueListener;
+    private EventHandler<MouseEvent> pauseResumeBtnListener;
+    private EventHandler<MouseEvent> homeBtnListener;
+
     public enum GameState {GAME_RUNNING, BEFORE_GAME, GAME_PAUSED}
     private GameState state = GameState.BEFORE_GAME;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         initMeshBackground();
-        initButtons();
-        initEvents();
+        initButtonEvents();
+        initSliderEvents();
     }
 
     private static final int ROW_NUM = 30;
@@ -92,8 +99,8 @@ public class SceneController implements Initializable {
         }
     }
 
-    private void initButtons() {
-        pauseResumeBtn.addEventFilter(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {
+    public void initButtonEvents() {
+        pauseResumeBtnListener = (MouseEvent event) -> {
             if(event.getButton() == MouseButton.PRIMARY) {
                 if(state == GameState.GAME_RUNNING) {
                     pauseResumeBtn.setText("继续");
@@ -106,10 +113,10 @@ public class SceneController implements Initializable {
                     state = GameState.GAME_RUNNING;
                 }
             }
-        });
-        pauseResumeBtn.setDisable(true);
+        };
+        pauseResumeBtn.addEventFilter(MouseEvent.MOUSE_CLICKED, pauseResumeBtnListener);
 
-        homeBtn.addEventFilter(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {
+        homeBtnListener = (MouseEvent event) -> {
             if(event.getButton() == MouseButton.PRIMARY) {
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setContentText("您确定要返回主页？");
@@ -120,6 +127,7 @@ public class SceneController implements Initializable {
                         logicController.exit();
                         logicController = null;
                         pauseResumeBtn.setDisable(true);
+                        speedSlider.setDisable(true);
                         state = GameState.BEFORE_GAME;
                         homeBtn.setDisable(true);
                         homeScene.setVisible(true);
@@ -127,8 +135,8 @@ public class SceneController implements Initializable {
                     }
                 }
             }
-        });
-        homeBtn.setDisable(true);
+        };
+        homeBtn.addEventFilter(MouseEvent.MOUSE_CLICKED, homeBtnListener);
 
         createServerBtn.addEventFilter(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {
             if(event.getButton() == MouseButton.PRIMARY) {
@@ -161,6 +169,11 @@ public class SceneController implements Initializable {
         });
     }
 
+    public void removeButtonListners() {
+        pauseResumeBtn.removeEventFilter(MouseEvent.MOUSE_CLICKED, pauseResumeBtnListener);
+        homeBtn.removeEventFilter(MouseEvent.MOUSE_CLICKED, homeBtnListener);
+    }
+
     private void startAsMaster() {
         homeScene.setVisible(false);
         logicController = new MasterLogicController(gameCanvas, infoLabel, this);
@@ -171,6 +184,7 @@ public class SceneController implements Initializable {
         homeScene.setVisible(false);
         String addr = addressField.getText();
         int port = Integer.parseInt(portField.getText());
+        state = GameState.GAME_RUNNING;
         logicController = new SlaveLogicController(gameCanvas, this, infoLabel, addressField.getText(), port);
     }
 
@@ -180,12 +194,17 @@ public class SceneController implements Initializable {
         speedSlider.setDisable(false);
     }
 
-    public void togglePauseBtn() {
-        if(pauseResumeBtn.getText().equals("暂停")) {
+    public void togglePauseBtn(boolean pause) {
+        if(pause) {
             pauseResumeBtn.setText("继续");
+            state = GameState.GAME_PAUSED;
+            infoLabel.setText("暂停中");
+            infoLabel.setVisible(true);
         }
         else {
             pauseResumeBtn.setText("暂停");
+            state = GameState.GAME_RUNNING;
+            infoLabel.setVisible(false);
         }
     }
 
@@ -203,13 +222,18 @@ public class SceneController implements Initializable {
         }
     }
 
-    private void initEvents() {
-        speedSlider.valueProperty().addListener(((observable, oldValue, newValue) -> {
+    public void initSliderEvents() {
+        sliderValueListener = (observable, oldValue, newValue) -> {
             int roundValue = newValue.intValue();
             speedSlider.setValue(roundValue);
             logicController.setSpeed(roundValue);
-        }));
-        speedSlider.setDisable(true);
+        };
+
+        speedSlider.valueProperty().addListener(sliderValueListener);
+    }
+
+    public void removeSliderEvents() {
+        speedSlider.valueProperty().removeListener(sliderValueListener);
     }
 
     public void notifyInHole(boolean inHole) {
@@ -228,5 +252,17 @@ public class SceneController implements Initializable {
         if(logicController != null) {
             logicController.exit();
         }
+    }
+
+    public void setSpeedSlider(int speed) {
+        speedSlider.setValue(speed);
+    }
+
+    public Button getHomeBtn() {
+        return homeBtn;
+    }
+
+    public Button getPauseResumeBtn() {
+        return pauseResumeBtn;
     }
 }

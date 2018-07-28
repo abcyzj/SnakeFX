@@ -31,10 +31,26 @@ public class Bush implements Sprite {
         return P.distance(X, Y) < bushSize/2;
     }
 
+    public Point2D getPos() {
+        return new Point2D(X, Y);
+    }
+
     public JSONObject toJSONObject() {
         JSONObject obj = new JSONObject();
         obj.put("X", X);
         obj.put("Y", Y);
         return obj;
+    }
+
+    public boolean outOfCanvas() {
+        return X < 0 || X > Constants.CANVAS_WIDTH || Y < 0 || Y > Constants.CANVAS_HEIGHT;
+    }
+
+    public boolean overlaps(Bush bush) {
+        return bush.getPos().distance(getPos()) < bushSize;
+    }
+
+    public boolean overlaps(Egg egg) {
+        return getPos().distance(egg.getPos()) < bushSize;
     }
 }

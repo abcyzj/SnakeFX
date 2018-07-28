@@ -10,6 +10,7 @@ import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import javafx.application.Platform;
 import logic.MasterLogicController;
+import org.json.JSONObject;
 
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -103,5 +104,13 @@ class ServerHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
         System.out.println(ctx.channel().remoteAddress() + "left");
+    }
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+        JSONObject JSONMsg = new JSONObject((String)msg);
+        Platform.runLater(() -> {
+            logicController.onMessageReceived(JSONMsg);
+        });
     }
 }

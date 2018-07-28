@@ -57,7 +57,7 @@ public class Snake implements Sprite {
 
     public Snake(Hole birthHole, Direction direction, Color color) {
         this(birthHole.pos.getX(), birthHole.pos.getY(), direction, color);
-        this.getInHole(birthHole);
+        this.getOutOfHole(birthHole);
     }
 
     @Override

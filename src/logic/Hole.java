@@ -32,6 +32,18 @@ public class Hole implements Sprite {
         return pos.distance(point) < holeSize/2;
     }
 
+    public boolean overlaps(Hole hole) {
+        return pos.distance(hole.pos) < holeSize;
+    }
+
+    public boolean overlaps(Bush bush) {
+        return pos.distance(bush.getPos()) < Bush.bushSize;
+    }
+
+    public boolean overlaps(Egg egg) {
+        return pos.distance(egg.getPos()) < holeSize;
+    }
+
     public JSONObject toJSONObject() {
         JSONObject obj = new JSONObject();
         obj.put("X", pos.getX());
