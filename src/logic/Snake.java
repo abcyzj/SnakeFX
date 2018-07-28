@@ -3,8 +3,12 @@ package logic;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.LinkedList;
+
+import static logic.Snake.Direction.*;
 
 public class Snake implements Sprite {
     public static double cubeHeight = 30;
@@ -49,6 +53,11 @@ public class Snake implements Sprite {
         for(int i = 0; i < INIT_LENGTH; i++) {
             bodies.add(new Point2D(headX + i*dx, headY + i*dy));
         }
+    }
+
+    public Snake(Hole birthHole, Direction direction, Color color) {
+        this(birthHole.pos.getX(), birthHole.pos.getY(), direction, color);
+        this.getInHole(birthHole);
     }
 
     @Override
@@ -188,5 +197,77 @@ public class Snake implements Sprite {
         for(int i = 0; i < EAT_BODIES; i++) {
             bodies.addLast(new Point2D(tail.getX(), tail.getY()));
         }
+    }
+
+    public boolean inMyBody(Point2D P) {
+        boolean inBody = false;
+        if(!P.equals(head)) {
+            for(Point2D body: bodies) {
+                if(body.distance(P) < cubeWidth/2) {
+                    inBody = true;
+                    break;
+                }
+            }
+        }
+        else {
+            for(Point2D body: bodies.subList(INIT_LENGTH, bodies.size())) {
+                if(body.distance(P) < cubeWidth/2) {
+                    inBody = true;
+                    break;
+                }
+            }
+        }
+        return inBody;
+    }
+
+    public int getLength() {
+        return bodies.size()/10;
+    }
+
+    public Color getColor() {
+        return color;
+    }
+
+    public JSONObject toJSONObject() {
+        JSONObject obj = new JSONObject();
+        JSONArray JSONBodies = new JSONArray();
+        for(Point2D body: bodies) {
+            JSONObject JSONBody = new JSONObject();
+            JSONBody.put("X", body.getX());
+            JSONBody.put("Y", body.getY());
+            JSONBodies.put(JSONBody);
+        }
+        obj.put("bodies", JSONBodies);
+        obj.put("direction", direction.toString());
+        obj.put("headX", head.getX());
+        obj.put("headY", head.getY());
+        return obj;
+    }
+
+    public void updateFromJSONObject(JSONObject obj) {
+        JSONArray JSONBodies = obj.getJSONArray("bodies");
+        bodies.clear();
+        for(int i = 0; i < JSONBodies.length(); i++) {
+            JSONObject JSONBody = JSONBodies.getJSONObject(i);
+            bodies.add(new Point2D(JSONBody.getDouble("X"), JSONBody.getDouble("Y")));
+        }
+        String dir = obj.getString("direction");
+        switch(dir) {
+            case "UP":
+                direction = UP;
+                break;
+            case "DOWN":
+                direction = DOWN;
+                break;
+            case "LEFT":
+                direction = LEFT;
+                break;
+            case "RIGHT":
+                direction = RIGHT;
+                break;
+        }
+        double headX = obj.getDouble("headX");
+        double headY = obj.getDouble("headY");
+        head = new Point2D(headX, headY);
     }
 }

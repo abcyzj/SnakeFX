@@ -1,7 +1,9 @@
 package logic;
 
+import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
+import org.json.JSONObject;
 
 public class Bush implements Sprite {
     public static Image bushImg = new Image("img/bush.png");
@@ -23,5 +25,16 @@ public class Bush implements Sprite {
     @Override
     public void update() {
         //DO NOTHING
+    }
+
+    public boolean inside(Point2D P) {
+        return P.distance(X, Y) < bushSize/2;
+    }
+
+    public JSONObject toJSONObject() {
+        JSONObject obj = new JSONObject();
+        obj.put("X", X);
+        obj.put("Y", Y);
+        return obj;
     }
 }

@@ -7,9 +7,10 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class Main extends Application {
+    private SceneController sceneController;
 
     @Override
-    public void start(Stage primaryStage) throws Exception{
+    public void start(Stage primaryStage) throws Exception {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("GameScene.fxml"));
         Parent root = loader.load();
         primaryStage.setTitle("Snake");
@@ -17,11 +18,16 @@ public class Main extends Application {
         Scene gameScene = new Scene(root);
         gameScene.getStylesheets().add(getClass().getResource("Snake.css").toExternalForm());
         primaryStage.setScene(gameScene);
-        GameSceneController gameSceneController = loader.getController();
-        gameSceneController.initEvents(primaryStage);
+        sceneController = loader.getController();
+        sceneController.initKeyEvents(primaryStage);
         primaryStage.show();
     }
 
+    @Override
+    public void stop() throws Exception {
+        sceneController.exit();//需要把网络线程关掉
+        super.stop();
+    }
 
     public static void main(String[] args) {
         launch(args);

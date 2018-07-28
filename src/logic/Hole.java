@@ -3,6 +3,7 @@ package logic;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import org.json.JSONObject;
 
 public class Hole implements Sprite {
     public static final double holeSize = 50;
@@ -29,5 +30,12 @@ public class Hole implements Sprite {
 
     public boolean isInHole(Point2D point) {
         return pos.distance(point) < holeSize/2;
+    }
+
+    public JSONObject toJSONObject() {
+        JSONObject obj = new JSONObject();
+        obj.put("X", pos.getX());
+        obj.put("Y", pos.getY());
+        return obj;
     }
 }
