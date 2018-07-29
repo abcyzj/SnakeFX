@@ -12,7 +12,6 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
@@ -51,7 +50,7 @@ public class SceneController implements Initializable {
     @FXML
     private Button connectBtn;
     @FXML
-    private AnchorPane homeScene;
+    private GridPane homeScene;
     @FXML
     private TextField addressField;
     @FXML
@@ -81,6 +80,7 @@ public class SceneController implements Initializable {
         initMeshBackground();
         initButtonEvents();
         initSliderEvents();
+        gameCanvas.widthProperty().addListener(observable -> initMeshBackground());
     }
 
     private static final int ROW_NUM = 30;
@@ -139,6 +139,7 @@ public class SceneController implements Initializable {
                         infoLabel.setVisible(false);
                         snakeNumLabel.setVisible(false);
                         scoreLabel.setVisible(false);
+                        inHoleLabel.setVisible(false);
                     }
                 }
             }
@@ -279,7 +280,7 @@ public class SceneController implements Initializable {
 
     public void setBGM() {
         FileChooser BGMChooser = new FileChooser();
-        BGMChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("Music File", "mp3", "wav"));
+        BGMChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Music File", "*.mp3", "*.wav"));
         File BGMFile = BGMChooser.showOpenDialog(stage);
         if(BGMFile == null) {
             return;

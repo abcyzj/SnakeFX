@@ -27,3 +27,11 @@
 .info-text {
     -fx-font-size: 25px;
 }
+#meshBackground {
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 20, 0, 0, 0);
+    -fx-background-size: 1200 900;
+    -fx-background-radius: 30;
+    -fx-border-radius: 30;
+    -fx-border-width: 5;
+    -fx-border-color: transparent;
+}

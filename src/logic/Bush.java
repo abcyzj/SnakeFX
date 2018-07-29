@@ -51,6 +51,6 @@ public class Bush implements Sprite {
     }
 
     public boolean overlaps(Egg egg) {
-        return getPos().distance(egg.getPos()) < bushSize*2;
+        return getPos().distance(egg.getPos()) < bushSize;
     }
 }

@@ -78,6 +78,8 @@ public class SlaveLogicController implements LogicController {
             case RIGHT:
                 msg.put("key", "RIGHT");
                 break;
+                default:
+                    return;
         }
         channel.writeAndFlush(msg.toString());
     }
@@ -246,6 +248,8 @@ public class SlaveLogicController implements LogicController {
 
         sceneController.getPauseResumeBtn().setDisable(true);
         sceneController.getSpeedSlider().setDisable(true);
+        infoLabel.setText("暂停中");
+        state = State.GAME_OVER;
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setContentText("对方已经断线");
         alert.showAndWait();

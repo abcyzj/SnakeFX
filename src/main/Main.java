@@ -14,7 +14,7 @@ public class Main extends Application {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("GameScene.fxml"));
         Parent root = loader.load();
         primaryStage.setTitle("Snake");
-        primaryStage.setResizable(false);
+        primaryStage.setResizable(true);
         Scene gameScene = new Scene(root);
         gameScene.getStylesheets().add(getClass().getResource("Snake.css").toExternalForm());
         primaryStage.setScene(gameScene);

@@ -89,8 +89,6 @@ public class MasterLogicController implements LogicController {
         snakes.add(snakeA);
         snakes.add(snakeB);
 
-        genEggs();
-
         for(int i = 0; i < Constants.BUSH_WALL_NUM; i++) {
             Bush lastBush;
             while(true) {
@@ -131,6 +129,8 @@ public class MasterLogicController implements LogicController {
                 }
             }
         }
+
+        genEggs();
     }
 
     private void initPlayers() {
@@ -397,16 +397,10 @@ public class MasterLogicController implements LogicController {
 
     public void startGame() {
         state = State.IN_GAME;
-        infoLabel.setText("游戏即将开始");
         sceneController.getSnakeNumLabel().setVisible(true);
         sceneController.getScoreLabel().setVisible(true);
         channel.writeAndFlush(getStaticPos().toString());
-        //延时一段时间开始
-        Timeline startTimeline = new Timeline(new KeyFrame(
-                Duration.millis(Constants.WAIT_TIME_BEFORE_START),
-                ae -> start()
-        ));
-        startTimeline.play();
+        start();
     }
 
     //返回静态资源（除蛇、蛋以外的物体）
@@ -458,7 +452,9 @@ public class MasterLogicController implements LogicController {
     }
 
     private void pauseWithoutSending() {
-        timeline.pause();
+        if(timeline != null) {
+            timeline.pause();
+        }
         infoLabel.setText("暂停中");
         infoLabel.setVisible(true);
     }
@@ -544,6 +540,9 @@ public class MasterLogicController implements LogicController {
     }
 
     public void onMessageReceived(JSONObject msg) {
+        if(state == State.ABOUT_TO_EXIT || state == State.GAME_OVER) {
+            return;
+        }
         String type = msg.getString("type");
         switch(type) {
             case "start":
@@ -572,6 +571,7 @@ public class MasterLogicController implements LogicController {
         pause();
         sceneController.getPauseResumeBtn().setDisable(true);
         sceneController.getSpeedSlider().setDisable(true);
+        state = State.GAME_OVER;
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setContentText("对方已经断线");
         alert.showAndWait();

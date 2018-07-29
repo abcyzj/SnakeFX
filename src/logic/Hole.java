@@ -41,7 +41,7 @@ public class Hole implements Sprite {
     }
 
     public boolean overlaps(Egg egg) {
-        return pos.distance(egg.getPos()) < holeSize*2;
+        return pos.distance(egg.getPos()) < holeSize;
     }
 
     public JSONObject toJSONObject() {
