@@ -4,6 +4,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Alert;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.text.Text;
 import main.SceneController;
@@ -27,7 +28,10 @@ public class SlaveLogicController implements LogicController {
     private Vector<Hole> holes = new Vector<>();
     private Vector<Egg> eggs = new Vector<>();
     private Vector<Bush> bushes = new Vector<>();
-    private boolean aboutToExit = false;
+    private Vector<Explosion> explosions = new Vector<>();
+
+    private enum State {ABOUT_TO_EXIT, IN_GAME, CONNECTING, CONNECTION_FAILED, GAME_OVER}
+    State state = State.CONNECTING;
 
     public SlaveLogicController(Canvas gameCanvas, SceneController sceneController, Text infoLabel, String host, int port) {
         this.gameCanvas = gameCanvas;
@@ -88,7 +92,7 @@ public class SlaveLogicController implements LogicController {
 
     @Override
     public void exit() {
-        aboutToExit = true;
+        state = State.ABOUT_TO_EXIT;
         client.close();
         GraphicsContext gc = gameCanvas.getGraphicsContext2D();
         gc.clearRect(0, 0, Constants.CANVAS_WIDTH, Constants.CANVAS_HEIGHT);
@@ -101,10 +105,14 @@ public class SlaveLogicController implements LogicController {
            if(F.isSuccess()) {
                infoLabel.setVisible(false);
                sceneController.enableGameButtons();
+               state = State.IN_GAME;
+               sceneController.getSnakeNumLabel().setVisible(true);
+               sceneController.getScoreLabel().setVisible(true);
            }
            else {
                infoLabel.setText("无法连接，请返回主页重试");
                sceneController.getHomeBtn().setDisable(false);
+               state = State.CONNECTION_FAILED;
            }
         });
         infoLabel.setVisible(true);
@@ -116,7 +124,7 @@ public class SlaveLogicController implements LogicController {
     }
 
     public void onMsgReceived(JSONObject msg) {
-        if(aboutToExit) {
+        if(state == State.ABOUT_TO_EXIT) {
             return;
         }
         String type = msg.getString("type");
@@ -151,6 +159,8 @@ public class SlaveLogicController implements LogicController {
                 String result = msg.getString("result");
                 infoLabel.setVisible(true);
                 sceneController.getPauseResumeBtn().setDisable(true);
+                sceneController.getSpeedSlider().setDisable(true);
+                state = State.GAME_OVER;
                 switch(result) {
                     case "draw":
                         infoLabel.setText("平局");
@@ -199,6 +209,13 @@ public class SlaveLogicController implements LogicController {
             JSONObject JSONEgg = JSONEggs.getJSONObject(i);
             eggs.add(new Egg(JSONEgg.getDouble("X"), JSONEgg.getDouble("Y")));
         }
+
+        explosions.clear();
+        JSONArray JSONExplosions = msg.getJSONArray("explosions");
+        for(int i = 0; i < JSONExplosions.length(); i++) {
+            JSONObject JSONExplosion = JSONExplosions.getJSONObject(i);
+            explosions.add(new Explosion(JSONExplosion));
+        }
         renderCanvas();
     }
 
@@ -217,5 +234,20 @@ public class SlaveLogicController implements LogicController {
         for(Egg egg: eggs) {
             egg.render(gc);
         }
+        for(Explosion explosion: explosions) {
+            explosion.render(gc);
+        }
+    }
+
+    public void onConnectionInactive() {
+        if(state == State.ABOUT_TO_EXIT || state == State.GAME_OVER) {
+            return;
+        }
+
+        sceneController.getPauseResumeBtn().setDisable(true);
+        sceneController.getSpeedSlider().setDisable(true);
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setContentText("对方已经断线");
+        alert.showAndWait();
     }
 }

@@ -18,7 +18,6 @@ public class Client {
     private String host;
     private int port;
     private EventLoopGroup group;
-    private Channel channel;
 
     public Client(SlaveLogicController logicController, String host, int port) {
         this.logicController = logicController;
@@ -67,7 +66,7 @@ class ClientHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        System.out.println("disconnected");
+        Platform.runLater(logicController::onConnectionInactive);
     }
 
     @Override

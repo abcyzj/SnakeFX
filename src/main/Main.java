@@ -19,6 +19,7 @@ public class Main extends Application {
         gameScene.getStylesheets().add(getClass().getResource("Snake.css").toExternalForm());
         primaryStage.setScene(gameScene);
         sceneController = loader.getController();
+        sceneController.setStage(primaryStage);
         sceneController.initKeyEvents(primaryStage);
         primaryStage.show();
     }

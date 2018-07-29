@@ -1,0 +1,23 @@
+<component name="ArtifactManager">
+  <artifact type="javafx" name="Snake">
+    <output-path>$PROJECT_DIR$/out/artifacts/Snake</output-path>
+    <properties id="javafx-properties">
+      <options>
+        <option name="appClass" value="main.Main" />
+        <option name="convertCss2Bin" value="true" />
+        <option name="description" value="" />
+        <option name="htmlPlaceholderId" value="" />
+        <option name="title" value="" />
+        <option name="vendor" value="" />
+        <option name="version" value="" />
+      </options>
+    </properties>
+    <root id="root">
+      <element id="archive" name="Snake.jar">
+        <element id="module-output" name="Snake" />
+        <element id="extracted-dir" path="$PROJECT_DIR$/lib/netty-all-4.1.27.Final.jar" path-in-jar="/" />
+        <element id="extracted-dir" path="$PROJECT_DIR$/lib/json-20140107.jar" path-in-jar="/" />
+      </element>
+    </root>
+  </artifact>
+</component>

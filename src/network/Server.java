@@ -52,7 +52,7 @@ public class Server {
     }
 
     public String getLocalIP() {
-        String ip = "";
+        String ip = "127.0.0.1";//如果没有可用连接则显示本机地址
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
             while(interfaces.hasMoreElements()) {
@@ -103,7 +103,7 @@ class ServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        System.out.println(ctx.channel().remoteAddress() + "left");
+        Platform.runLater(logicController::onConnectionInactive);
     }
 
     @Override

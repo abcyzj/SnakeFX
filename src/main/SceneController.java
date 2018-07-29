@@ -13,24 +13,23 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import logic.LogicController;
 import logic.MasterLogicController;
 import logic.SlaveLogicController;
-import org.json.JSONObject;
 
+import java.io.File;
 import java.net.URL;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.regex.Pattern;
 
 public class SceneController implements Initializable {
-    @FXML
-    private StackPane gameArea;
-    @FXML
-    private AnchorPane funcArea;
     @FXML
     private Canvas meshBackground;
     @FXML
@@ -58,15 +57,21 @@ public class SceneController implements Initializable {
     @FXML
     private TextField portField;
     @FXML
-    private GridPane infoPane;
-    @FXML
     private Text infoLabel;
+    @FXML
+    private Button silentBtn;
 
     private LogicController logicController;
 
     private ChangeListener<Number> sliderValueListener;
     private EventHandler<MouseEvent> pauseResumeBtnListener;
     private EventHandler<MouseEvent> homeBtnListener;
+    private Stage stage;
+    private MediaPlayer BGMPlayer;
+
+    public void setStage(Stage primaryStage) {
+        stage = primaryStage;
+    }
 
     public enum GameState {GAME_RUNNING, BEFORE_GAME, GAME_PAUSED}
     private GameState state = GameState.BEFORE_GAME;
@@ -132,6 +137,8 @@ public class SceneController implements Initializable {
                         homeBtn.setDisable(true);
                         homeScene.setVisible(true);
                         infoLabel.setVisible(false);
+                        snakeNumLabel.setVisible(false);
+                        scoreLabel.setVisible(false);
                     }
                 }
             }
@@ -264,5 +271,53 @@ public class SceneController implements Initializable {
 
     public Button getPauseResumeBtn() {
         return pauseResumeBtn;
+    }
+
+    public Slider getSpeedSlider() {
+        return speedSlider;
+    }
+
+    public void setBGM() {
+        FileChooser BGMChooser = new FileChooser();
+        BGMChooser.setSelectedExtensionFilter(new FileChooser.ExtensionFilter("Music File", "mp3", "wav"));
+        File BGMFile = BGMChooser.showOpenDialog(stage);
+        if(BGMFile == null) {
+            return;
+        }
+        Media m = new Media(BGMFile.toURI().toString());
+        if(BGMPlayer != null) {
+            BGMPlayer.stop();
+        }
+        BGMPlayer = new MediaPlayer(m);
+        BGMPlayer.setCycleCount(MediaPlayer.INDEFINITE);
+        BGMPlayer.play();
+        silentBtn.setDisable(false);
+    }
+
+    public void toggleSilent() {
+        if(silentBtn.getText().equals("静音")) {
+            silentBtn.setText("放音");
+            BGMPlayer.pause();
+        }
+        else if(silentBtn.getText().equals("放音")){
+            silentBtn.setText("静音");
+            BGMPlayer.play();
+        }
+    }
+
+    public void showAboutInfo() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("关于");
+        alert.setHeaderText("SnakeFX");
+        alert.setContentText("作者: abcyzj");
+        alert.show();
+    }
+
+    public Text getScoreLabel() {
+        return scoreLabel;
+    }
+
+    public Text getSnakeNumLabel() {
+        return snakeNumLabel;
     }
 }

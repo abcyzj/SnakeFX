@@ -8,6 +8,7 @@ import javafx.animation.Timeline;
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Alert;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
@@ -36,8 +37,11 @@ public class MasterLogicController implements LogicController {
     private Vector<Hole> holes;
     private Vector<Egg> eggs;
     private Vector<Bush> bushes;
+    private Vector<Explosion> explosions;
     private Server server;
     private Channel channel;
+    private enum State {INIT, LISTENING, LISTEN_FAILED, IN_GAME, GAME_OVER, ABOUT_TO_EXIT}
+    private State state = State.INIT;
 
     public MasterLogicController(Canvas gameCanvas, Text infoLabel, SceneController sceneController) {
         this.gameCanvas = gameCanvas;
@@ -56,6 +60,7 @@ public class MasterLogicController implements LogicController {
         holes = new Vector<>();
         eggs = new Vector<>();
         bushes = new Vector<>();
+        explosions = new Vector<>();
 
         for(int i = 0; i < Constants.HOLE_NUM; i++) {
             Hole newHole;
@@ -155,6 +160,10 @@ public class MasterLogicController implements LogicController {
             egg.render(gc);
             egg.update();
         }
+        for(Explosion explosion: explosions) {
+            explosion.render(gc);
+            explosion.update();
+        }
         syncCanvas();
     }
 
@@ -168,6 +177,11 @@ public class MasterLogicController implements LogicController {
             JSONEggs.put(egg.toJSONObject());
         }
         info.put("eggs", JSONEggs);
+        JSONArray JSONExplosions = new JSONArray();
+        for(Explosion explosion: explosions) {
+            JSONExplosions.put(explosion.toJSONObject());
+        }
+        info.put("explosions", JSONExplosions);
         channel.writeAndFlush(info.toString());
     }
 
@@ -285,8 +299,19 @@ public class MasterLogicController implements LogicController {
             }
         }
         for(Snake deadSnake: deadSnakes) {
+            addExplosion(deadSnake.getHead());
             revive(deadSnake);
         }
+    }
+
+    private void addExplosion(Point2D pos) {
+        Explosion newExplosion = new Explosion(pos.getX(), pos.getY());
+        explosions.add(newExplosion);
+        Timeline removeTimeline = new Timeline(new KeyFrame(
+                Duration.millis(Constants.EXPLOSION_TIME),
+                ae -> explosions.remove(newExplosion)
+        ));
+        removeTimeline.play();
     }
 
     private Snake revive(Snake oldSnake) {
@@ -316,10 +341,12 @@ public class MasterLogicController implements LogicController {
     }
 
     private void tackleWin() {
+        state = State.GAME_OVER;
         pause();
         infoLabel.setVisible(true);
         infoLabel.setText("胜负已分");
         sceneController.getPauseResumeBtn().setDisable(true);
+        sceneController.getSpeedSlider().setDisable(true);
         JSONObject msg = new JSONObject();
         msg.put("type", "result");
         if(playerA.remainingSnakes < 0 && playerB.remainingSnakes < 0) {
@@ -352,13 +379,16 @@ public class MasterLogicController implements LogicController {
                 InetSocketAddress address = (InetSocketAddress) F.channel().localAddress();
                 String IP = server.getLocalIP();
                 infoLabel.setText("正在端口" + address.getPort() + "上监听\n" + "IP:" + IP);
+                state = State.LISTENING;
             }
             else {
                 infoLabel.setText("无法监听，请返回主页重试");
+                state = State.LISTEN_FAILED;
             }
         });
         infoLabel.setVisible(true);
         infoLabel.setText("准备监听");
+        sceneController.getHomeBtn().setDisable(false);
     }
 
     public void setChannel(Channel channel) {
@@ -366,8 +396,17 @@ public class MasterLogicController implements LogicController {
     }
 
     public void startGame() {
-        start();
+        state = State.IN_GAME;
+        infoLabel.setText("游戏即将开始");
+        sceneController.getSnakeNumLabel().setVisible(true);
+        sceneController.getScoreLabel().setVisible(true);
         channel.writeAndFlush(getStaticPos().toString());
+        //延时一段时间开始
+        Timeline startTimeline = new Timeline(new KeyFrame(
+                Duration.millis(Constants.WAIT_TIME_BEFORE_START),
+                ae -> start()
+        ));
+        startTimeline.play();
     }
 
     //返回静态资源（除蛇、蛋以外的物体）
@@ -425,6 +464,7 @@ public class MasterLogicController implements LogicController {
     }
 
     public void exit() {
+        state = State.ABOUT_TO_EXIT;
         if(timeline != null) {
             timeline.stop();
         }
@@ -522,5 +562,18 @@ public class MasterLogicController implements LogicController {
                 onOpponentKeyPressed(msg.getString("key"));
                 break;
         }
+    }
+
+    public void onConnectionInactive() {
+        if(state == State.ABOUT_TO_EXIT || state == State.GAME_OVER) {
+            return;
+        }
+
+        pause();
+        sceneController.getPauseResumeBtn().setDisable(true);
+        sceneController.getSpeedSlider().setDisable(true);
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setContentText("对方已经断线");
+        alert.showAndWait();
     }
 }
