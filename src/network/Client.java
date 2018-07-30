@@ -61,7 +61,10 @@ class ClientHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
-        logicController.setChannel(ctx.channel());
+        Platform.runLater(() -> {
+            logicController.setChannel(ctx.channel());
+            logicController.onChannelActive();
+        });
     }
 
     @Override

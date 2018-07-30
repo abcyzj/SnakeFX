@@ -7,10 +7,10 @@ import javafx.fxml.Initializable;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
@@ -59,6 +59,12 @@ public class SceneController implements Initializable {
     private Text infoLabel;
     @FXML
     private Button silentBtn;
+    @FXML
+    private TextArea chatContentArea;
+    @FXML
+    private Button chatSendBtn;
+    @FXML
+    private TextField chatInputField;
 
     private LogicController logicController;
 
@@ -80,7 +86,7 @@ public class SceneController implements Initializable {
         initMeshBackground();
         initButtonEvents();
         initSliderEvents();
-        gameCanvas.widthProperty().addListener(observable -> initMeshBackground());
+        initTextFieldEvents();
     }
 
     private static final int ROW_NUM = 30;
@@ -134,6 +140,9 @@ public class SceneController implements Initializable {
                         pauseResumeBtn.setDisable(true);
                         speedSlider.setDisable(true);
                         state = GameState.BEFORE_GAME;
+                        chatSendBtn.setDisable(true);
+                        chatContentArea.clear();
+                        chatInputField.setDisable(true);
                         homeBtn.setDisable(true);
                         homeScene.setVisible(true);
                         infoLabel.setVisible(false);
@@ -173,6 +182,19 @@ public class SceneController implements Initializable {
                 }
 
                 startAsSlave();
+            }
+        });
+
+        chatSendBtn.addEventFilter(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {
+            if(event.getButton() == MouseButton.PRIMARY) {
+                if(chatInputField.getText().isEmpty()) {
+                    return;
+                }
+
+                if(logicController != null) {
+                    logicController.sendMessage(chatInputField.getText());
+                    chatInputField.clear();
+                }
             }
         });
     }
@@ -224,8 +246,9 @@ public class SceneController implements Initializable {
     private void onKeyPressed(KeyEvent event) {
         switch(state) {
             case GAME_RUNNING:
-                logicController.onKeyPressed(event);
-                event.consume();
+                if(!chatInputField.isFocused()) {//当聊天输入获得焦点时不向逻辑模块发送键盘事件
+                    logicController.onKeyPressed(event);
+                }
                 break;
         }
     }
@@ -238,6 +261,15 @@ public class SceneController implements Initializable {
         };
 
         speedSlider.valueProperty().addListener(sliderValueListener);
+        speedSlider.addEventFilter(KeyEvent.ANY, (KeyEvent event) -> event.consume());//忽略所有键盘事件
+    }
+
+    private void initTextFieldEvents() {
+        chatInputField.addEventFilter(KeyEvent.KEY_PRESSED, (KeyEvent event) -> {
+            if(event.getCode() == KeyCode.ESCAPE) {//当按下ESC时，焦点转移到游戏场景上
+                gameCanvas.requestFocus();
+            }
+        });
     }
 
     public void removeSliderEvents() {
@@ -276,6 +308,18 @@ public class SceneController implements Initializable {
 
     public Slider getSpeedSlider() {
         return speedSlider;
+    }
+
+    public TextArea getChatContentArea() {
+        return chatContentArea;
+    }
+
+    public Button getChatSendBtn() {
+        return chatSendBtn;
+    }
+
+    public TextField getChatInputField() {
+        return chatInputField;
     }
 
     public void setBGM() {

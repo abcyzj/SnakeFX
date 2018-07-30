@@ -8,4 +8,5 @@ public interface LogicController {
     void setSpeed(int speed);
     void onKeyPressed(KeyEvent event);
     void exit();
+    void sendMessage(String msg);
 }

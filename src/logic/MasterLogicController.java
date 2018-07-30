@@ -399,6 +399,8 @@ public class MasterLogicController implements LogicController {
         state = State.IN_GAME;
         sceneController.getSnakeNumLabel().setVisible(true);
         sceneController.getScoreLabel().setVisible(true);
+        sceneController.getChatSendBtn().setDisable(false);
+        sceneController.getChatInputField().setDisable(false);
         channel.writeAndFlush(getStaticPos().toString());
         start();
     }
@@ -560,6 +562,10 @@ public class MasterLogicController implements LogicController {
             case "keyPressed":
                 onOpponentKeyPressed(msg.getString("key"));
                 break;
+            case "msg":
+                String originalContent = sceneController.getChatContentArea().getText();
+                sceneController.getChatContentArea().setText(originalContent + "对方>>" + msg.getString("content") + "\n");
+                break;
         }
     }
 
@@ -575,5 +581,17 @@ public class MasterLogicController implements LogicController {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setContentText("对方已经断线");
         alert.showAndWait();
+    }
+
+    @Override
+    public void sendMessage(String msg) {
+        if(channel != null) {
+            String originalContent = sceneController.getChatContentArea().getText();
+            sceneController.getChatContentArea().setText(originalContent + "我>>" + msg + "\n");
+            JSONObject info = new JSONObject();
+            info.put("type", "msg");
+            info.put("content", msg);
+            channel.writeAndFlush(info.toString());
+        }
     }
 }

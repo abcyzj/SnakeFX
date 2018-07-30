@@ -2,9 +2,22 @@
     -fx-background-color: linear-gradient(rgb(34, 105, 27) 0%, rgb(72, 143, 39) 20%, rgb(34, 105, 27) 100%);
 }
 
-@font-face {
-    font-family: "JapanFont";
-    src: url("font/JapanFont.ttf")
+
+.text-area {
+    -fx-background-color: transparent;
+}
+
+.text-area .scroll-pane {
+    -fx-background-color: transparent;
+}
+
+.text-area .scroll-pane .viewport{
+    -fx-background-color: transparent;
+}
+
+.text-area .scroll-pane .content{
+    -fx-background-color: linear-gradient(rgb(34, 105, 27), rgb(72, 143, 39) 20%);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 50, 50, 50, 50);
 }
 
 .circle-button {

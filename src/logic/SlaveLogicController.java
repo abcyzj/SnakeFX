@@ -100,6 +100,23 @@ public class SlaveLogicController implements LogicController {
         gc.clearRect(0, 0, Constants.CANVAS_WIDTH, Constants.CANVAS_HEIGHT);
     }
 
+    @Override
+    public void sendMessage(String msg) {
+        if(channel != null) {
+            String originalContent = sceneController.getChatContentArea().getText();
+            sceneController.getChatContentArea().setText(originalContent + "我>>" + msg + "\n");
+            JSONObject info = new JSONObject();
+            info.put("type", "msg");
+            info.put("content", msg);
+            channel.writeAndFlush(info.toString());
+        }
+    }
+
+    public void onChannelActive() {
+        sceneController.getChatSendBtn().setDisable(false);
+        sceneController.getChatInputField().setDisable(false);
+    }
+
     public void startClient() {
         client = new Client(this, host, port);
         ChannelFuture connectFuture = client.connect();
@@ -174,6 +191,10 @@ public class SlaveLogicController implements LogicController {
                         infoLabel.setText("很遗憾，您输掉了游戏");
                         break;
                 }
+                break;
+            case "msg":
+                String originalContent = sceneController.getChatContentArea().getText();
+                sceneController.getChatContentArea().setText(originalContent + "对方>>" + msg.getString("content") + "\n");
                 break;
         }
     }
