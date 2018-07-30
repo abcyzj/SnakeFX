@@ -347,6 +347,8 @@ public class MasterLogicController implements LogicController {
         infoLabel.setText("胜负已分");
         sceneController.getPauseResumeBtn().setDisable(true);
         sceneController.getSpeedSlider().setDisable(true);
+        sceneController.getChatInputField().setDisable(true);
+        sceneController.getChatSendBtn().setDisable(true);
         JSONObject msg = new JSONObject();
         msg.put("type", "result");
         if(playerA.remainingSnakes < 0 && playerB.remainingSnakes < 0) {
@@ -577,6 +579,8 @@ public class MasterLogicController implements LogicController {
         pause();
         sceneController.getPauseResumeBtn().setDisable(true);
         sceneController.getSpeedSlider().setDisable(true);
+        sceneController.getChatInputField().setDisable(true);
+        sceneController.getChatSendBtn().setDisable(true);
         state = State.GAME_OVER;
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setContentText("对方已经断线");

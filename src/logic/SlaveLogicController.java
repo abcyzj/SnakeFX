@@ -143,7 +143,7 @@ public class SlaveLogicController implements LogicController {
     }
 
     public void onMsgReceived(JSONObject msg) {
-        if(state == State.ABOUT_TO_EXIT) {
+        if(state == State.ABOUT_TO_EXIT || state == State.GAME_OVER) {
             return;
         }
         String type = msg.getString("type");
@@ -179,6 +179,8 @@ public class SlaveLogicController implements LogicController {
                 infoLabel.setVisible(true);
                 sceneController.getPauseResumeBtn().setDisable(true);
                 sceneController.getSpeedSlider().setDisable(true);
+                sceneController.getChatInputField().setDisable(true);
+                sceneController.getChatSendBtn().setDisable(true);
                 state = State.GAME_OVER;
                 switch(result) {
                     case "draw":
@@ -269,6 +271,8 @@ public class SlaveLogicController implements LogicController {
 
         sceneController.getPauseResumeBtn().setDisable(true);
         sceneController.getSpeedSlider().setDisable(true);
+        sceneController.getChatInputField().setDisable(true);
+        sceneController.getChatSendBtn().setDisable(true);
         infoLabel.setText("暂停中");
         state = State.GAME_OVER;
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
