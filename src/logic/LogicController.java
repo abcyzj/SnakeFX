@@ -1,5 +1,9 @@
 package logic;
 
+/*
+ * LogicController接口，由MasterLogicController和SlaveLogicController分别实现
+ */
+
 import javafx.scene.input.KeyEvent;
 
 public interface LogicController {

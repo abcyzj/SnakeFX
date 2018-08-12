@@ -1,5 +1,9 @@
 package logic;
 
+/*
+ * 主机逻辑控制器类
+ */
+
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import javafx.animation.Animation;
@@ -55,6 +59,7 @@ public class MasterLogicController implements LogicController {
         startServer();
     }
 
+    // 初始化游戏场景中的物件
     private void initSprites() {
         snakes = new Vector<>();
         holes = new Vector<>();
@@ -138,6 +143,7 @@ public class MasterLogicController implements LogicController {
         playerB = new Player();
     }
 
+    // 游戏场景更新函数
     private void updateCanvas() {
         tackleHole();
         tackleEgg();
@@ -167,6 +173,7 @@ public class MasterLogicController implements LogicController {
         syncCanvas();
     }
 
+    // 发送游戏场景信息给网络通信模块
     private void syncCanvas() {
         JSONObject info = new JSONObject();
         info.put("type", "sync");
@@ -278,6 +285,7 @@ public class MasterLogicController implements LogicController {
         channel.writeAndFlush(msg.toString());
     }
 
+    // 处理碰撞
     private void tackleCollision() {
         Vector<Snake> deadSnakes = new Vector<>();
         for(Snake snakeA: snakes) {
@@ -314,6 +322,7 @@ public class MasterLogicController implements LogicController {
         removeTimeline.play();
     }
 
+    // 复活蛇
     private Snake revive(Snake oldSnake) {
         snakes.remove(oldSnake);
         Random rand = new Random();
@@ -434,6 +443,7 @@ public class MasterLogicController implements LogicController {
         }
     }
 
+    // 开始游戏，但不向网络中发送开始信息
     private void startWithoutSending() {
         timeline = new Timeline(new KeyFrame(
                 Duration.millis(frameTime),
@@ -463,6 +473,7 @@ public class MasterLogicController implements LogicController {
         infoLabel.setVisible(true);
     }
 
+    // 退出游戏，清理场景并关闭网络通信线程
     public void exit() {
         state = State.ABOUT_TO_EXIT;
         if(timeline != null) {

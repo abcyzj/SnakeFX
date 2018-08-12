@@ -1,5 +1,9 @@
 package network;
 
+/*
+ * 主机网络模块
+ */
+
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;

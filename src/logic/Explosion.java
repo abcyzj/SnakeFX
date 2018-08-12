@@ -1,5 +1,9 @@
 package logic;
 
+/*
+ * 爆炸效果类
+ */
+
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
@@ -29,6 +33,7 @@ public class Explosion implements Sprite {
         gc.drawImage(explosionImg, pos.getX() - size/2, pos.getY() - size/2, size, size);
     }
 
+    // 通过调用update函数实现动画效果
     @Override
     public void update() {
         enlargeRatio *= enlargeSpeed;

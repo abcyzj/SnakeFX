@@ -1,5 +1,9 @@
 package main;
 
+/*
+ * 入口类，创建窗口并加载FXML文件
+ */
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;

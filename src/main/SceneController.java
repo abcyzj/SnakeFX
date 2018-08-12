@@ -1,5 +1,9 @@
 package main;
 
+/*
+ * UI控件控制器
+ */
+
 import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -29,6 +33,7 @@ import java.util.ResourceBundle;
 import java.util.regex.Pattern;
 
 public class SceneController implements Initializable {
+    // 声明FXML中描述的控件
     @FXML
     private Canvas meshBackground;
     @FXML
@@ -81,6 +86,7 @@ public class SceneController implements Initializable {
     public enum GameState {GAME_RUNNING, BEFORE_GAME, GAME_PAUSED}
     private GameState state = GameState.BEFORE_GAME;
 
+    // 初始化函数，在创建窗口时调用
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         initMeshBackground();
@@ -204,12 +210,14 @@ public class SceneController implements Initializable {
         homeBtn.removeEventFilter(MouseEvent.MOUSE_CLICKED, homeBtnListener);
     }
 
+    // 创建MasterLogicController
     private void startAsMaster() {
         homeScene.setVisible(false);
         logicController = new MasterLogicController(gameCanvas, infoLabel, this);
         state = GameState.GAME_RUNNING;
     }
 
+    // 创建SlaveLogicController
     private void startAsSlave() {
         homeScene.setVisible(false);
         String addr = addressField.getText();
@@ -254,6 +262,7 @@ public class SceneController implements Initializable {
     }
 
     public void initSliderEvents() {
+        // Slider的取值只能为整数
         sliderValueListener = (observable, oldValue, newValue) -> {
             int roundValue = newValue.intValue();
             speedSlider.setValue(roundValue);

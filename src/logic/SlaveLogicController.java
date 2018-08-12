@@ -1,5 +1,9 @@
 package logic;
 
+/*
+ * 从机逻辑控制模块
+ */
+
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import javafx.scene.canvas.Canvas;
@@ -217,6 +221,7 @@ public class SlaveLogicController implements LogicController {
         renderCanvas();
     }
 
+    // 同步游戏场景
     private void syncCanvas(JSONObject msg) {
         if(snakes.isEmpty()) {
             snakeA = new Snake(0, 0, Snake.Direction.RIGHT, Constants.SNAKE_A_COLOR);

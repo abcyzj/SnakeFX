@@ -1,5 +1,9 @@
 package logic;
 
+/*
+ * 蛇类
+ */
+
 import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -104,6 +108,7 @@ public class Snake implements Sprite {
         gc.restore();
     }
 
+    // 利用update函数实现蛇移动效果
     @Override
     public void update() {
         double dx = 0, dy = 0;
